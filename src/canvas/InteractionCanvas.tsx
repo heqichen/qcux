@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewportStore } from '@/store/viewportStore';
-import { renderPageThumbnail, renderPageTitleScreenSpace } from '@/canvas/renderers/pageRenderer';
+import { renderPageThumbnail, renderPageTitleScreenSpace, renderLandingTagScreenSpace } from '@/canvas/renderers/pageRenderer';
 import { renderLinkScreenSpace, renderTempLinkLine, hitTestLinkScreenSpace } from '@/canvas/renderers/linkRenderer';
 import { hitTestPage } from '@/canvas/hitTest';
 import { screenToWorld } from '@/utils/geometry';
@@ -72,7 +72,7 @@ export const InteractionCanvas: React.FC = () => {
 
     // 页面缩略图
     for (const page of project.pages) {
-      renderPageThumbnail(ctx, page, page.id === selectedPageId, page.isLandingPage);
+      renderPageThumbnail(ctx, page, page.id === selectedPageId);
     }
 
     // 创建链接时的临时线
@@ -98,6 +98,13 @@ export const InteractionCanvas: React.FC = () => {
     // 页面标题 - 固定字体大小
     for (const page of project.pages) {
       renderPageTitleScreenSpace(ctx, page, viewport.scale, viewport.offsetX, viewport.offsetY);
+    }
+
+    // Landing Page 标记 - 固定字体大小
+    for (const page of project.pages) {
+      if (page.isLandingPage) {
+        renderLandingTagScreenSpace(ctx, page, viewport.scale, viewport.offsetX, viewport.offsetY);
+      }
     }
     animFrameRef.current = requestAnimationFrame(render);
   }, [project, selectedPageId, selectedLinkId, viewport, isLinkCreationMode, linkSourcePageId, linkSourceElementId, mouseWorld]);

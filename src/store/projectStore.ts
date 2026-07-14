@@ -255,3 +255,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     return get().project.links.filter((l) => l.sourcePageId === pageId);
   },
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).__projectStore = useProjectStore;
+}

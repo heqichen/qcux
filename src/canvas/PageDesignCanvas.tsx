@@ -39,6 +39,7 @@ export const PageDesignCanvas: React.FC = () => {
 
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
+  const [cursorStyle, setCursorStyle] = React.useState('default');
 
   const currentPage = project.pages.find((p) => p.id === currentPageId);
 
@@ -227,6 +228,33 @@ export const PageDesignCanvas: React.FC = () => {
         return;
       }
 
+      // 检测鼠标悬停位置以设置光标
+      if (!dragRef.current && currentPage && selectedElementId) {
+        const selected = currentPage.elements.find((el) => el.id === selectedElementId);
+        if (selected && canvasRef.current) {
+          const rect = canvasRef.current.getBoundingClientRect();
+          const screenX = e.clientX - rect.left;
+          const screenY = e.clientY - rect.top;
+          const handle = hitTestHandle(
+            { x: selected.x, y: selected.y, width: selected.width, height: selected.height },
+            screenX, screenY,
+            viewport.scale, viewport.offsetX, viewport.offsetY,
+          );
+          if (handle) {
+            const cursorMap: Record<string, string> = {
+              tl: 'nwse-resize', tc: 'ns-resize', tr: 'nesw-resize',
+              ml: 'ew-resize', mr: 'ew-resize',
+              bl: 'nesw-resize', bc: 'ns-resize', br: 'nwse-resize',
+            };
+            setCursorStyle(cursorMap[handle] || 'default');
+          } else {
+            const world = getWorldPos(e);
+            const hitEl = hitTestElement(currentPage.elements, world.x, world.y);
+            setCursorStyle(hitEl?.id === selectedElementId ? 'move' : 'default');
+          }
+        }
+      }
+
       if (!dragRef.current || !currentPageId) return;
       const d = dragRef.current;
 
@@ -266,7 +294,7 @@ export const PageDesignCanvas: React.FC = () => {
         });
       }
     },
-    [currentPageId, viewport.scale, updateElement, pan],
+    [currentPageId, viewport.scale, updateElement, pan, currentPage, selectedElementId, getWorldPos],
   );
 
   const onMouseUp = useCallback(() => {
@@ -292,7 +320,7 @@ export const PageDesignCanvas: React.FC = () => {
           display: 'block',
           width: '100%',
           height: '100%',
-          cursor: dragRef.current?.type === 'resize' ? 'nwse-resize' : dragRef.current ? 'grabbing' : 'default',
+          cursor: dragRef.current?.type === 'resize' ? 'nwse-resize' : dragRef.current ? 'grabbing' : cursorStyle,
         }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}

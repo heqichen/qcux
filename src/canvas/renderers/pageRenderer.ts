@@ -11,7 +11,6 @@ export function renderPageThumbnail(
   ctx: CanvasRenderingContext2D,
   page: Page,
   isSelected: boolean,
-  isLandingPage: boolean,
 ): void {
   const { x, y, width, height } = page;
 
@@ -45,15 +44,23 @@ export function renderPageThumbnail(
     ctx.lineWidth = SELECTION_STROKE_WIDTH;
     ctx.strokeRect(x, y, width, height);
   }
+}
 
-  // Landing Page 标识 - 左下角外侧，左边和界面框齐平
-  if (isLandingPage) {
-    ctx.fillStyle = '#FF9800';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('🏠 Landing', x, y + height + 4);
-  }
+// Landing Page 标识在屏幕空间渲染，固定字体大小，不受缩放影响
+export function renderLandingTagScreenSpace(
+  ctx: CanvasRenderingContext2D,
+  page: Page,
+  scale: number,
+  offsetX: number,
+  offsetY: number,
+): void {
+  const sx = page.x * scale + offsetX;
+  const sy = (page.y + page.height) * scale + offsetY;
+  ctx.fillStyle = '#FF9800';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('🏠 Landing', sx, sy + 4);
 }
 
 // 页面标题在屏幕空间渲染，固定字体大小，不受缩放影响

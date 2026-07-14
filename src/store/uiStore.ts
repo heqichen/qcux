@@ -38,8 +38,6 @@ export const useUIStore = create<UIStore>((set) => ({
   linkSourcePageId: null,
   linkSourceElementId: null,
 
-  selectedLinkId: null,
-
   navigateToInteraction: () => {
     set({
       currentView: 'interaction',
@@ -100,3 +98,7 @@ export const useUIStore = create<UIStore>((set) => ({
   markDirty: () => set({ isDirty: true }),
   markClean: () => set({ isDirty: false }),
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).__uiStore = useUIStore;
+}
