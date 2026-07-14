@@ -146,14 +146,14 @@ export const PageDesignToolbox: React.FC = () => {
 
       {(selectedElement.type === 'text' || selectedElement.type === 'button') && (
         <>
-          <FieldRow label="文字">
+          <FullWidthField label="文字">
             <input
               type="text"
-              style={inputStyle}
+              style={fullWidthInputStyle}
               value={selectedElement.content}
               onChange={(e) => handleChange('content', e.target.value)}
             />
-          </FieldRow>
+          </FullWidthField>
           <FieldRow label="字号">
             <input
               type="number"
@@ -179,6 +179,13 @@ export const PageDesignToolbox: React.FC = () => {
 const FieldRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 8 }}>
     <span style={{ width: 32, fontSize: 12, color: '#666' }}>{label}</span>
+    {children}
+  </div>
+);
+
+const FullWidthField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 12, gap: 6 }}>
+    <span style={{ fontSize: 12, color: '#666' }}>{label}</span>
     {children}
   </div>
 );
@@ -232,6 +239,16 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   borderRadius: 3,
   fontSize: 13,
+};
+
+const fullWidthInputStyle: React.CSSProperties = {
+  width: '100%',
+  minWidth: 0,
+  padding: '6px 10px',
+  border: '1px solid #ccc',
+  borderRadius: 3,
+  fontSize: 13,
+  boxSizing: 'border-box',
 };
 
 const emptyStateStyle: React.CSSProperties = {
