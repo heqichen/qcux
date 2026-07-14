@@ -25,6 +25,8 @@ export const InteractionToolbox: React.FC = () => {
 
   return (
     <div style={toolboxStyle}>
+      <h3 style={titleStyle}>交互工具箱</h3>
+
       {selectedLink && (
         <LinkProperties
           link={selectedLink}
@@ -41,7 +43,7 @@ export const InteractionToolbox: React.FC = () => {
           <div style={{ marginTop: 0 }}>
             <button style={btnStyle} onClick={() => setShowElementList(true)}>🔗 添加交互</button>
           </div>
-          <div style={{ marginTop: 16, fontSize: 12, color: '#666' }}>
+          <div style={infoBlockStyle}>
             <div>选中界面: {selectedPage.title}</div>
             <div>尺寸: {selectedPage.width}×{selectedPage.height}</div>
             <div>元素数: {selectedPage.elements.length}</div>
@@ -51,7 +53,7 @@ export const InteractionToolbox: React.FC = () => {
       )}
 
       {!selectedLink && !selectedPage && (
-        <div style={{ color: '#999', padding: 8, fontSize: 13 }}>选择一个界面或交互链接</div>
+        <div style={emptyStateStyle}>选择一个界面或交互链接</div>
       )}
 
       {showElementList && selectedPage && (
@@ -103,6 +105,34 @@ const ElementListDialog: React.FC<{
     </div>
   </div>
 );
+
+const titleStyle: React.CSSProperties = {
+  margin: '0 0 12px 0',
+  fontSize: 13,
+  fontWeight: 600,
+  color: '#334155',
+};
+
+const infoBlockStyle: React.CSSProperties = {
+  marginTop: 16,
+  fontSize: 12,
+  color: '#666',
+  lineHeight: 1.8,
+  background: 'rgba(255,255,255,0.9)',
+  border: '1px solid #e2e8f0',
+  borderRadius: 8,
+  padding: 10,
+};
+
+const emptyStateStyle: React.CSSProperties = {
+  color: '#64748b',
+  fontSize: 13,
+  lineHeight: 1.6,
+  background: 'rgba(255,255,255,0.92)',
+  border: '1px solid #e2e8f0',
+  borderRadius: 8,
+  padding: 12,
+};
 
 const LinkProperties: React.FC<{
   link: Link;

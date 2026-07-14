@@ -19,13 +19,14 @@ const statusContainerStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-  minWidth: 0,
+  minWidth: 96,
   maxWidth: '40vw',
   padding: '0 10px',
   border: '1px solid #d7d7d7',
   borderRadius: 999,
   background: '#fff',
   height: 30,
+  flexShrink: 0,
 };
 
 const labelStyle: React.CSSProperties = {

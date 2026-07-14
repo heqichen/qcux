@@ -50,7 +50,7 @@ const App: React.FC = () => {
     return (
       <div style={appContainerStyle}>
         <InteractionToolbar />
-        <div style={mainAreaStyle}>
+        <div style={getMainAreaStyle('interaction')}>
           <InteractionCanvas />
           <InteractionToolbox />
         </div>
@@ -62,7 +62,7 @@ const App: React.FC = () => {
   return (
     <div style={appContainerStyle}>
       <PageDesignToolbar />
-      <div style={mainAreaStyle}>
+      <div style={getMainAreaStyle('pageDesign')}>
         <PageDesignCanvas />
         <PageDesignToolbox />
       </div>
@@ -77,10 +77,21 @@ const appContainerStyle: React.CSSProperties = {
   overflow: 'hidden',
 };
 
-const mainAreaStyle: React.CSSProperties = {
-  display: 'flex',
+const baseMainAreaStyle: React.CSSProperties = {
+  display: 'grid',
   flex: 1,
   overflow: 'hidden',
+  minWidth: 0,
 };
+
+function getMainAreaStyle(view: 'interaction' | 'pageDesign'): React.CSSProperties {
+  return {
+    ...baseMainAreaStyle,
+    gridTemplateColumns:
+      view === 'interaction'
+        ? 'minmax(0, 1fr) minmax(180px, 24vw)'
+        : 'minmax(0, 1fr) minmax(220px, 28vw)',
+  };
+}
 
 export default App;

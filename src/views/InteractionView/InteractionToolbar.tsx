@@ -1,11 +1,12 @@
 import React from 'react';
 import { ProjectStatus } from '@/components/ProjectStatus';
+import { ToolbarLayout } from '../../components/ToolbarLayout';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewportStore } from '@/store/viewportStore';
 import { getBoundingBox } from '@/utils/geometry';
 import { FileButtons } from '@/views/InteractionView/FileButtons';
-import { btnStyle, divider, toolbarStyle } from '@/views/InteractionView/styles';
+import { btnStyle, divider } from '@/views/InteractionView/styles';
 
 export const InteractionToolbar: React.FC = () => {
   const selectedPageId = useUIStore((state) => state.selectedPageId);
@@ -43,27 +44,30 @@ export const InteractionToolbar: React.FC = () => {
   };
 
   return (
-    <div style={toolbarStyle}>
-      <FileButtons />
-      <div style={divider} />
-      <button style={btnStyle} onClick={handleShowAll}>🔍 显示全局</button>
-      <button style={btnStyle} onClick={openAddPageDialog}>➕ 新增界面</button>
-      <button
-        style={{ ...btnStyle, opacity: selectedPageId ? 1 : 0.4 }}
-        disabled={!selectedPageId}
-        onClick={handleDelete}
-      >
-        🗑 删除界面
-      </button>
-      <button
-        style={{ ...btnStyle, opacity: selectedPageId ? 1 : 0.4 }}
-        disabled={!selectedPageId}
-        onClick={handleSetLandingPage}
-      >
-        🏠 设置 Landing Page
-      </button>
-      <div style={{ flex: 1 }} />
-      <ProjectStatus />
-    </div>
+    <ToolbarLayout
+      actions={(
+        <>
+          <FileButtons />
+          <div style={divider} />
+          <button style={btnStyle} onClick={handleShowAll}>🔍 显示全局</button>
+          <button style={btnStyle} onClick={openAddPageDialog}>➕ 新增界面</button>
+          <button
+            style={{ ...btnStyle, opacity: selectedPageId ? 1 : 0.4 }}
+            disabled={!selectedPageId}
+            onClick={handleDelete}
+          >
+            🗑 删除界面
+          </button>
+          <button
+            style={{ ...btnStyle, opacity: selectedPageId ? 1 : 0.4 }}
+            disabled={!selectedPageId}
+            onClick={handleSetLandingPage}
+          >
+            🏠 设置 Landing Page
+          </button>
+        </>
+      )}
+      status={<ProjectStatus />}
+    />
   );
 };

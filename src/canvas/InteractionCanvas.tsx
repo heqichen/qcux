@@ -233,7 +233,7 @@ export const InteractionCanvas: React.FC = () => {
   );
 
   return (
-    <div ref={containerRef} style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+    <div ref={containerRef} style={{ flex: 1, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
       <canvas
         ref={canvasRef}
         style={{

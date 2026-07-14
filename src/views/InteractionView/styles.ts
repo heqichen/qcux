@@ -3,12 +3,12 @@ import type React from 'react';
 export const toolbarStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
   padding: '8px 16px',
   background: '#f5f5f5',
   borderBottom: '1px solid #ddd',
   height: 44,
-  flexWrap: 'wrap',
+  minHeight: 44,
+  overflow: 'hidden',
 };
 
 export const btnStyle: React.CSSProperties = {
@@ -29,11 +29,16 @@ export const divider: React.CSSProperties = {
 };
 
 export const toolboxStyle: React.CSSProperties = {
-  width: 220,
+  width: '100%',
+  minWidth: 0,
   padding: 16,
-  background: '#fafafa',
-  borderLeft: '1px solid #ddd',
+  background: '#f6f7f9',
+  borderLeft: '1px solid #cfd4dc',
   overflowY: 'auto',
+  overflowX: 'hidden',
+  position: 'relative',
+  zIndex: 1,
+  boxShadow: '-6px 0 16px rgba(15, 23, 42, 0.08)',
 };
 
 export const inputStyle: React.CSSProperties = {

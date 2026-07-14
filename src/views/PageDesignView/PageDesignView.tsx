@@ -1,5 +1,6 @@
 import React from 'react';
 import { ProjectStatus } from '@/components/ProjectStatus';
+import { ToolbarLayout } from '../../components/ToolbarLayout';
 import { useProjectSave } from '../../hooks/useProjectSave';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
@@ -33,17 +34,20 @@ export const PageDesignToolbar: React.FC = () => {
   };
 
   return (
-    <div style={toolbarStyle}>
-      <button style={btnStyle} onClick={handleAddObject}>➕ 添加物件</button>
-      <button style={btnStyle} onClick={handleAddText}>🔤 添加文字</button>
-      <button style={btnStyle} onClick={handleAddButton}>🔘 添加按钮</button>
-      <button style={btnStyle} onClick={() => void saveProject()}>💾 保存项目</button>
-      <div style={{ flex: 1 }} />
-      <ProjectStatus />
-      <button style={{ ...btnStyle, background: '#666', color: '#fff' }} onClick={navigateToInteraction}>
-        ↩ 退出到交互设计界面
-      </button>
-    </div>
+    <ToolbarLayout
+      actions={(
+        <>
+          <button style={btnStyle} onClick={handleAddObject}>➕ 添加物件</button>
+          <button style={btnStyle} onClick={handleAddText}>🔤 添加文字</button>
+          <button style={btnStyle} onClick={handleAddButton}>🔘 添加按钮</button>
+          <button style={btnStyle} onClick={() => void saveProject()}>💾 保存项目</button>
+          <button style={{ ...btnStyle, background: '#666', color: '#fff' }} onClick={navigateToInteraction}>
+            ↩ 退出到交互设计界面
+          </button>
+        </>
+      )}
+      status={<ProjectStatus />}
+    />
   );
 };
 
@@ -155,16 +159,6 @@ const FieldRow: React.FC<{ label: string; children: React.ReactNode }> = ({ labe
   </div>
 );
 
-const toolbarStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '8px 16px',
-  background: '#f5f5f5',
-  borderBottom: '1px solid #ddd',
-  height: 44,
-};
-
 const btnStyle: React.CSSProperties = {
   padding: '6px 14px',
   border: '1px solid #ccc',
@@ -184,11 +178,16 @@ const smallBtnStyle: React.CSSProperties = {
 };
 
 const toolboxStyle: React.CSSProperties = {
-  width: 240,
+  width: '100%',
+  minWidth: 0,
   padding: 16,
-  background: '#fafafa',
-  borderLeft: '1px solid #ddd',
+  background: '#f6f7f9',
+  borderLeft: '1px solid #cfd4dc',
   overflowY: 'auto',
+  overflowX: 'hidden',
+  position: 'relative',
+  zIndex: 1,
+  boxShadow: '-6px 0 16px rgba(15, 23, 42, 0.08)',
 };
 
 const inputStyle: React.CSSProperties = {
