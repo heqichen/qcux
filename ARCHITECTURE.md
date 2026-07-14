@@ -168,10 +168,15 @@ interface Link {
 interface UIState {
   currentView: 'interaction' | 'pageDesign';
   currentPageId: string | null;
-  isDirty: boolean;         // 是否有未保存的修改
   isAddPageDialogOpen: boolean;
   isLinkCreationMode: boolean;
   linkSourceElementId: string | null;
+}
+
+interface ProjectStoreState {
+  project: ProjectFile;
+  projectPath: string | null; // Electron 中为真实路径，网页模式中通常为导入文件名或 null
+  isDirty: boolean;           // 仅在持久化项目数据发生变化后置为 true
 }
 ```
 
@@ -531,10 +536,17 @@ function generateExportHTML(project: ProjectFile): string {
   ├── 用户保存项目
   │     ├── 有已保存路径 → 直接写入
   │     └── 无路径 → Main Process: 保存对话框 → 写入 JSON
+  │           └── 保存成功后 projectStore.markProjectSaved()，清除 isDirty
   │
   └── 用户导出
         └── exportService.generateExportHTML() → Main Process: 写入 .html 文件
 ```
+
+补充说明：
+
+- Renderer 会基于 `projectPath` 和 `isDirty` 同步窗口标题，格式为 `路径或 Untitled` + 可选未保存标记 `•`
+- Electron 模式支持“已有路径则直接覆盖保存”的标准桌面逻辑
+- 网页模式下保存仍然通过浏览器下载实现，因此不会获得稳定的真实磁盘路径
 
 ---
 

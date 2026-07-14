@@ -27,6 +27,7 @@ export const InteractionCanvas: React.FC = () => {
   const linkSourcePageId = useUIStore((s) => s.linkSourcePageId);
   const linkSourceElementId = useUIStore((s) => s.linkSourceElementId);
   const addLink = useProjectStore((s) => s.addLink);
+  const removeLink = useProjectStore((s) => s.removeLink);
   const cancelLinkCreation = useUIStore((s) => s.cancelLinkCreation);
 
   const viewport = useViewportStore((s) => s.interactionViewport);
@@ -121,6 +122,27 @@ export const InteractionCanvas: React.FC = () => {
       if (isLinkCreationMode) {
         const targetPage = hitTestPage(project.pages, world.x, world.y);
         if (targetPage && linkSourcePageId && linkSourceElementId) {
+          const existingLink = project.links.find(
+            (link) =>
+              link.sourcePageId === linkSourcePageId
+              && link.sourceElementId === linkSourceElementId,
+          );
+
+          if (existingLink?.targetPageId === targetPage.id) {
+            cancelLinkCreation();
+            return;
+          }
+
+          if (existingLink) {
+            const shouldReplace = window.confirm('该交互源已经存在跳转，是否删除原有交互并改为新的目标界面？');
+            if (!shouldReplace) {
+              cancelLinkCreation();
+              return;
+            }
+
+            removeLink(existingLink.id);
+          }
+
           addLink(linkSourcePageId, linkSourceElementId, targetPage.id);
         }
         cancelLinkCreation();
@@ -153,7 +175,7 @@ export const InteractionCanvas: React.FC = () => {
         panStart.current = { x: e.clientX, y: e.clientY };
       }
     },
-    [getWorldPos, project.pages, project.links, isLinkCreationMode, linkSourcePageId, linkSourceElementId, selectPage, selectLink, addLink, cancelLinkCreation, viewport],
+    [getWorldPos, project.pages, project.links, isLinkCreationMode, linkSourcePageId, linkSourceElementId, selectPage, selectLink, addLink, removeLink, cancelLinkCreation, viewport],
   );
 
   const onMouseMove = useCallback(

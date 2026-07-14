@@ -1,4 +1,6 @@
 import React from 'react';
+import { ProjectStatus } from '@/components/ProjectStatus';
+import { useProjectSave } from '../../hooks/useProjectSave';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
 
@@ -7,6 +9,7 @@ export const PageDesignToolbar: React.FC = () => {
   const addElement = useProjectStore((s) => s.addElement);
   const selectElement = useUIStore((s) => s.selectElement);
   const navigateToInteraction = useUIStore((s) => s.navigateToInteraction);
+  const saveProject = useProjectSave();
 
   const handleAddObject = () => {
     if (currentPageId) {
@@ -34,7 +37,9 @@ export const PageDesignToolbar: React.FC = () => {
       <button style={btnStyle} onClick={handleAddObject}>➕ 添加物件</button>
       <button style={btnStyle} onClick={handleAddText}>🔤 添加文字</button>
       <button style={btnStyle} onClick={handleAddButton}>🔘 添加按钮</button>
+      <button style={btnStyle} onClick={() => void saveProject()}>💾 保存项目</button>
       <div style={{ flex: 1 }} />
+      <ProjectStatus />
       <button style={{ ...btnStyle, background: '#666', color: '#fff' }} onClick={navigateToInteraction}>
         ↩ 退出到交互设计界面
       </button>

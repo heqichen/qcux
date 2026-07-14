@@ -3,7 +3,6 @@ import { LINK_COLOR, LINK_ARROW_SIZE } from '@/utils/constants';
 import { clamp, distance } from '@/utils/geometry';
 
 const LINK_LINE_WIDTH = 3;
-const LINK_START_MARKER_RADIUS = 6;
 
 interface Point {
   x: number;
@@ -206,15 +205,13 @@ function drawPolyline(ctx: CanvasRenderingContext2D, points: Point[]): void {
 
 function drawStartMarker(ctx: CanvasRenderingContext2D, point: Point): void {
   const strokeColor = String(ctx.strokeStyle);
+  const radius = ctx.lineWidth / 2 + 1;
 
   ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = Math.max(2, ctx.lineWidth - 0.5);
+  ctx.fillStyle = strokeColor;
   ctx.beginPath();
-  ctx.arc(point.x, point.y, LINK_START_MARKER_RADIUS, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -238,12 +235,12 @@ function drawArrowHead(
   ctx.beginPath();
   ctx.moveTo(x, y);
   ctx.lineTo(
-    x + LINK_ARROW_SIZE * Math.cos(angle - Math.PI / 6),
-    y + LINK_ARROW_SIZE * Math.sin(angle - Math.PI / 6),
+    x - LINK_ARROW_SIZE * Math.cos(angle - Math.PI / 6),
+    y - LINK_ARROW_SIZE * Math.sin(angle - Math.PI / 6),
   );
   ctx.lineTo(
-    x + LINK_ARROW_SIZE * Math.cos(angle + Math.PI / 6),
-    y + LINK_ARROW_SIZE * Math.sin(angle + Math.PI / 6),
+    x - LINK_ARROW_SIZE * Math.cos(angle + Math.PI / 6),
+    y - LINK_ARROW_SIZE * Math.sin(angle + Math.PI / 6),
   );
   ctx.closePath();
   ctx.fill();

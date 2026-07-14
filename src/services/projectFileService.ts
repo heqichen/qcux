@@ -1,5 +1,10 @@
 import type { ProjectFile } from '@/types/project';
 
+export interface SaveProjectResult {
+  didSave: boolean;
+  path: string | null;
+}
+
 export async function openProjectFile(): Promise<{ data: ProjectFile; path: string } | null> {
   if (window.electronAPI) {
     const result = await window.electronAPI.openFile();
@@ -32,24 +37,24 @@ export async function openProjectFile(): Promise<{ data: ProjectFile; path: stri
   });
 }
 
-export async function saveProjectFile(project: ProjectFile, projectPath: string | null): Promise<string | null> {
+export async function saveProjectFile(project: ProjectFile, projectPath: string | null): Promise<SaveProjectResult> {
   const json = JSON.stringify(project, null, 2);
 
   if (window.electronAPI) {
     if (projectPath) {
-      await window.electronAPI.writeFile(projectPath, json);
-      return projectPath;
+      const didWrite = await window.electronAPI.writeFile(projectPath, json);
+      return { didSave: didWrite, path: didWrite ? projectPath : projectPath };
     }
 
     const nextPath = await window.electronAPI.saveFile();
-    if (!nextPath) return null;
+    if (!nextPath) return { didSave: false, path: projectPath };
 
-    await window.electronAPI.writeFile(nextPath, json);
-    return nextPath;
+    const didWrite = await window.electronAPI.writeFile(nextPath, json);
+    return { didSave: didWrite, path: didWrite ? nextPath : projectPath };
   }
 
   downloadFile(json, 'project.qcux.json', 'application/json');
-  return projectPath;
+  return { didSave: true, path: projectPath };
 }
 
 export async function exportProjectHtml(html: string, defaultName = 'export.html'): Promise<void> {

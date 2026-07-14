@@ -83,3 +83,7 @@ ipcMain.handle('dialog:exportHTML', async (_event, defaultName?: string) => {
   if (result.canceled || !result.filePath) return null;
   return result.filePath;
 });
+
+ipcMain.on('window:setTitle', (_event, title: string) => {
+  mainWindow?.setTitle(title);
+});

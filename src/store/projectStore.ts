@@ -26,10 +26,12 @@ interface ProjectStore {
   // 状态
   project: ProjectFile;
   projectPath: string | null;
+  isDirty: boolean;
 
   // 项目操作
   newProject: () => void;
   loadProject: (data: ProjectFile, path: string) => void;
+  markProjectSaved: (data: ProjectFile, path?: string | null) => void;
   getSerializedProject: () => ProjectFile;
 
   // 页面操作
@@ -56,13 +58,22 @@ interface ProjectStore {
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   project: createDefaultProject(),
   projectPath: null,
+  isDirty: false,
 
   newProject: () => {
-    set({ project: createDefaultProject(), projectPath: null });
+    set({ project: createDefaultProject(), projectPath: null, isDirty: false });
   },
 
   loadProject: (data, path) => {
-    set({ project: data, projectPath: path });
+    set({ project: data, projectPath: path, isDirty: false });
+  },
+
+  markProjectSaved: (data, path) => {
+    set((state) => ({
+      project: data,
+      projectPath: path === undefined ? state.projectPath : path,
+      isDirty: false,
+    }));
   },
 
   getSerializedProject: () => {
@@ -86,6 +97,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         ...project,
         pages: [...project.pages, newPage],
       },
+      isDirty: true,
     });
 
     return newPage;
@@ -93,22 +105,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   removePage: (pageId) => {
     const { project } = get();
-    set({ project: removePageFromProject(project, pageId) });
+    set({ project: removePageFromProject(project, pageId), isDirty: true });
   },
 
   updatePagePosition: (pageId, x, y) => {
     const { project } = get();
-    set({ project: updatePageInProject(project, pageId, { x, y }) });
+    set({ project: updatePageInProject(project, pageId, { x, y }), isDirty: true });
   },
 
   updatePageTitle: (pageId, title) => {
     const { project } = get();
-    set({ project: updatePageInProject(project, pageId, { title }) });
+    set({ project: updatePageInProject(project, pageId, { title }), isDirty: true });
   },
 
   setLandingPage: (pageId) => {
     const { project } = get();
-    set({ project: setLandingPageInProject(project, pageId) });
+    set({ project: setLandingPageInProject(project, pageId), isDirty: true });
   },
 
   getPageById: (pageId) => {
@@ -123,19 +135,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const id = generateId();
     const element = createPageElement(page, id, type);
 
-    set({ project: addElementToProject(project, pageId, element) });
+    set({ project: addElementToProject(project, pageId, element), isDirty: true });
 
     return element;
   },
 
   removeElement: (pageId, elementId) => {
     const { project } = get();
-    set({ project: removeElementFromProject(project, pageId, elementId) });
+    set({ project: removeElementFromProject(project, pageId, elementId), isDirty: true });
   },
 
   updateElement: (pageId, elementId, updates) => {
     const { project } = get();
-    set({ project: updateElementInProject(project, pageId, elementId, updates) });
+    set({ project: updateElementInProject(project, pageId, elementId, updates), isDirty: true });
   },
 
   getElementById: (pageId, elementId) => {
@@ -154,14 +166,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const id = generateId();
     const newLink: Link = { id, sourcePageId, sourceElementId, targetPageId };
 
-    set({ project: addLinkToProject(project, newLink) });
+    set({ project: addLinkToProject(project, newLink), isDirty: true });
 
     return newLink;
   },
 
   removeLink: (linkId) => {
     const { project } = get();
-    set({ project: removeLinkFromProject(project, linkId) });
+    set({ project: removeLinkFromProject(project, linkId), isDirty: true });
   },
 
   getLinksForPage: (pageId) => {

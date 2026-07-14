@@ -1,4 +1,5 @@
 import React from 'react';
+import { ProjectStatus } from '@/components/ProjectStatus';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewportStore } from '@/store/viewportStore';
@@ -61,6 +62,8 @@ export const InteractionToolbar: React.FC = () => {
       >
         🏠 设置 Landing Page
       </button>
+      <div style={{ flex: 1 }} />
+      <ProjectStatus />
     </div>
   );
 };
