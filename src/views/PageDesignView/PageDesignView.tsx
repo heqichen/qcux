@@ -55,8 +55,11 @@ export const PageDesignToolbox: React.FC = () => {
   const fontSizeStep = 4;
   const currentPageId = useUIStore((s) => s.currentPageId);
   const selectedElementId = useUIStore((s) => s.selectedElementId);
+  const selectElement = useUIStore((s) => s.selectElement);
   const project = useProjectStore((s) => s.project);
+  const updatePageTitle = useProjectStore((s) => s.updatePageTitle);
   const updateElement = useProjectStore((s) => s.updateElement);
+  const removeElement = useProjectStore((s) => s.removeElement);
 
   const currentPage = project.pages.find((p) => p.id === currentPageId);
   const selectedElement = currentPage?.elements.find((e) => e.id === selectedElementId);
@@ -64,7 +67,20 @@ export const PageDesignToolbox: React.FC = () => {
   if (!selectedElement) {
     return (
       <div style={toolboxStyle}>
-        <div style={{ color: '#999', padding: 16 }}>选择一个元素以编辑属性</div>
+        <div style={emptyStateStyle}>
+          <div style={emptyStateTitleStyle}>界面名称</div>
+          <input
+            type="text"
+            style={emptyStateInputStyle}
+            value={currentPage?.title || ''}
+            placeholder="输入界面名称"
+            onChange={(event) => {
+              if (!currentPageId) return;
+              updatePageTitle(currentPageId, event.target.value);
+            }}
+          />
+          <div style={emptyStateHintStyle}>未选中元素时，可以在这里直接修改当前界面的名称。</div>
+        </div>
       </div>
     );
   }
@@ -72,6 +88,12 @@ export const PageDesignToolbox: React.FC = () => {
   const handleChange = (field: string, value: string | number) => {
     if (!currentPageId) return;
     updateElement(currentPageId, selectedElement.id, { [field]: value });
+  };
+
+  const handleDelete = () => {
+    if (!currentPageId) return;
+    removeElement(currentPageId, selectedElement.id);
+    selectElement(null);
   };
 
   return (
@@ -148,6 +170,8 @@ export const PageDesignToolbox: React.FC = () => {
           </FieldRow>
         </>
       )}
+
+      <button style={dangerBtnStyle} onClick={handleDelete}>删除元素</button>
     </div>
   );
 };
@@ -177,6 +201,18 @@ const smallBtnStyle: React.CSSProperties = {
   fontSize: 12,
 };
 
+const dangerBtnStyle: React.CSSProperties = {
+  width: '100%',
+  marginTop: 12,
+  padding: '8px 12px',
+  border: '1px solid #dc2626',
+  borderRadius: 4,
+  background: '#fff5f5',
+  color: '#b91c1c',
+  cursor: 'pointer',
+  fontSize: 13,
+};
+
 const toolboxStyle: React.CSSProperties = {
   width: '100%',
   minWidth: 0,
@@ -196,4 +232,34 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   borderRadius: 3,
   fontSize: 13,
+};
+
+const emptyStateStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  background: 'rgba(255,255,255,0.92)',
+  border: '1px solid #e2e8f0',
+  borderRadius: 8,
+  padding: 12,
+};
+
+const emptyStateTitleStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: '#334155',
+};
+
+const emptyStateInputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '6px 10px',
+  border: '1px solid #ccc',
+  borderRadius: 3,
+  fontSize: 13,
+};
+
+const emptyStateHintStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: '#64748b',
+  lineHeight: 1.6,
 };

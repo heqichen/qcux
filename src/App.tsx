@@ -15,8 +15,12 @@ const App: React.FC = () => {
   const isDirty = useProjectStore((s) => s.isDirty);
   const project = useProjectStore((s) => s.project);
   const duplicatePageFromSnapshot = useProjectStore((s) => s.duplicatePageFromSnapshot);
+  const removeElement = useProjectStore((s) => s.removeElement);
   const selectedPageId = useUIStore((s) => s.selectedPageId);
+  const currentPageId = useUIStore((s) => s.currentPageId);
+  const selectedElementId = useUIStore((s) => s.selectedElementId);
   const selectPage = useUIStore((s) => s.selectPage);
+  const selectElement = useUIStore((s) => s.selectElement);
   const saveProject = useProjectSave();
   const copiedPageRef = useRef<Page | null>(null);
 
@@ -57,6 +61,13 @@ const App: React.FC = () => {
         return;
       }
 
+      if (currentView === 'pageDesign' && event.key === 'Delete' && currentPageId && selectedElementId) {
+        event.preventDefault();
+        removeElement(currentPageId, selectedElementId);
+        selectElement(null);
+        return;
+      }
+
       if (currentView !== 'interaction' || !(event.ctrlKey || event.metaKey)) {
         return;
       }
@@ -84,7 +95,18 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [currentView, duplicatePageFromSnapshot, project.pages, saveProject, selectPage, selectedPageId]);
+  }, [
+    currentPageId,
+    currentView,
+    duplicatePageFromSnapshot,
+    project.pages,
+    removeElement,
+    saveProject,
+    selectElement,
+    selectPage,
+    selectedElementId,
+    selectedPageId,
+  ]);
 
   if (currentView === 'interaction') {
     return (
