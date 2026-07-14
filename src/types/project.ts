@@ -29,7 +29,10 @@ export interface Link {
   sourcePageId: string;
   sourceElementId: string;
   targetPageId: string;
+  transition: LinkTransition;
 }
+
+export type LinkTransition = 'instant' | 'slide-right' | 'slide-left' | 'slide-up' | 'slide-down';
 
 export type ElementType = 'object' | 'text' | 'button';
 

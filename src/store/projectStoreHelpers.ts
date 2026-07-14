@@ -132,6 +132,17 @@ export function addLinkToProject(project: ProjectFile, link: Link): ProjectFile 
   };
 }
 
+export function updateLinkInProject(
+  project: ProjectFile,
+  linkId: string,
+  updates: Partial<Link>,
+): ProjectFile {
+  return {
+    ...project,
+    links: project.links.map((link) => (link.id === linkId ? { ...link, ...updates } : link)),
+  };
+}
+
 export function removeLinkFromProject(project: ProjectFile, linkId: string): ProjectFile {
   return {
     ...project,

@@ -24,6 +24,7 @@ interface UIStore {
   closeAddPageDialog: () => void;
   startLinkCreation: (pageId: string, elementId: string) => void;
   cancelLinkCreation: () => void;
+  resetForNewProject: () => void;
   markDirty: () => void;
   markClean: () => void;
 }
@@ -98,6 +99,22 @@ export const useUIStore = create<UIStore>((set) => ({
 
   cancelLinkCreation: () => {
     set({
+      isLinkCreationMode: false,
+      linkSourcePageId: null,
+      linkSourceElementId: null,
+    });
+  },
+
+  resetForNewProject: () => {
+    set({
+      currentView: 'interaction',
+      currentPageId: null,
+      selectedPageId: null,
+      selectedElementId: null,
+      selectedLinkId: null,
+      interactionPageOrder: [],
+      isDirty: false,
+      isAddPageDialogOpen: false,
       isLinkCreationMode: false,
       linkSourcePageId: null,
       linkSourceElementId: null,

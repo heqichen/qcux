@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
-import type { Link, ProjectFile } from '@/types/project';
+import type { Link, LinkTransition, ProjectFile } from '@/types/project';
 import { btnStyle, dialogOverlayStyle, dialogStyle, inputStyle, toolboxStyle } from '@/views/InteractionView/styles';
+
+const LINK_TRANSITION_OPTIONS: Array<{ value: LinkTransition; label: string }> = [
+  { value: 'instant', label: '直接出现（默认）' },
+  { value: 'slide-right', label: '右侧滑入' },
+  { value: 'slide-left', label: '左侧滑入' },
+  { value: 'slide-up', label: '上边滑入' },
+  { value: 'slide-down', label: '下边滑入' },
+];
 
 export const InteractionToolbox: React.FC = () => {
   const selectedPageId = useUIStore((state) => state.selectedPageId);
@@ -10,6 +18,7 @@ export const InteractionToolbox: React.FC = () => {
   const selectLink = useUIStore((state) => state.selectLink);
   const startLinkCreation = useUIStore((state) => state.startLinkCreation);
   const removeLink = useProjectStore((state) => state.removeLink);
+  const updateLink = useProjectStore((state) => state.updateLink);
   const updateProjectName = useProjectStore((state) => state.updateProjectName);
   const project = useProjectStore((state) => state.project);
   const [showElementList, setShowElementList] = useState(false);
@@ -32,6 +41,7 @@ export const InteractionToolbox: React.FC = () => {
         <LinkProperties
           link={selectedLink}
           project={project}
+          onTransitionChange={(transition) => updateLink(selectedLink.id, { transition })}
           onDelete={() => {
             removeLink(selectedLink.id);
             selectLink(null);
@@ -158,11 +168,32 @@ const emptyStateHintStyle: React.CSSProperties = {
   color: '#64748b',
 };
 
+const linkFieldStyle: React.CSSProperties = {
+  marginTop: 14,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+};
+
+const linkFieldLabelStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: '#475569',
+  fontWeight: 600,
+};
+
+const linkSelectStyle: React.CSSProperties = {
+  ...inputStyle,
+  width: '100%',
+  flex: 'none',
+  background: '#fff',
+};
+
 const LinkProperties: React.FC<{
   link: Link;
   project: ProjectFile;
+  onTransitionChange: (transition: LinkTransition) => void;
   onDelete: () => void;
-}> = ({ link, project, onDelete }) => {
+}> = ({ link, project, onTransitionChange, onDelete }) => {
   const sourcePage = project.pages.find((page) => page.id === link.sourcePageId);
   const targetPage = project.pages.find((page) => page.id === link.targetPageId);
   const sourceElement = sourcePage?.elements.find((element) => element.id === link.sourceElementId);
@@ -173,6 +204,18 @@ const LinkProperties: React.FC<{
       <div style={{ fontSize: 12, color: '#666', lineHeight: 1.8 }}>
         <div><b>来自:</b> {sourcePage?.title || '?'} → {sourceElement ? `[${sourceElement.type}] ${'content' in sourceElement ? sourceElement.content : sourceElement.name}` : '?'}</div>
         <div><b>去往:</b> {targetPage?.title || '?'}</div>
+      </div>
+      <div style={linkFieldStyle}>
+        <div style={linkFieldLabelStyle}>出现方式</div>
+        <select
+          style={linkSelectStyle}
+          value={link.transition || 'instant'}
+          onChange={(event) => onTransitionChange(event.target.value as LinkTransition)}
+        >
+          {LINK_TRANSITION_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
       </div>
       <button
         style={{ ...btnStyle, marginTop: 12, color: '#E53935', borderColor: '#E53935', width: '100%' }}

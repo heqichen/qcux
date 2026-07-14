@@ -22,6 +22,8 @@ const App: React.FC = () => {
   const selectedElementId = useUIStore((s) => s.selectedElementId);
   const selectPage = useUIStore((s) => s.selectPage);
   const selectElement = useUIStore((s) => s.selectElement);
+  const navigateToInteraction = useUIStore((s) => s.navigateToInteraction);
+  const navigateToPageDesign = useUIStore((s) => s.navigateToPageDesign);
   const saveProject = useProjectSave();
   const copiedPageRef = useRef<Page | null>(null);
   const copiedElementRef = useRef<{ element: Element; pasteCount: number } | null>(null);
@@ -45,6 +47,28 @@ const App: React.FC = () => {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [isDirty]);
+
+  useEffect(() => {
+    if (currentView !== 'pageDesign') {
+      return;
+    }
+
+    const currentPageExists = currentPageId
+      ? project.pages.some((page) => page.id === currentPageId)
+      : false;
+
+    if (currentPageExists) {
+      return;
+    }
+
+    const fallbackPage = project.pages[0];
+    if (fallbackPage) {
+      navigateToPageDesign(fallbackPage.id);
+      return;
+    }
+
+    navigateToInteraction();
+  }, [currentPageId, currentView, navigateToInteraction, navigateToPageDesign, project.pages]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

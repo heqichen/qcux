@@ -20,9 +20,11 @@ import {
   removePageFromProject,
   setLandingPageInProject,
   updateElementInProject,
+  updateLinkInProject,
   updatePageInProject,
 } from '@/store/projectStoreHelpers';
 import { generateId } from '@/utils/id';
+import type { LinkTransition } from '@/types/project';
 
 interface ProjectStore {
   // 状态
@@ -56,6 +58,7 @@ interface ProjectStore {
 
   // 链接操作
   addLink: (sourcePageId: string, sourceElementId: string, targetPageId: string) => Link;
+  updateLink: (linkId: string, updates: Partial<Link>) => void;
   removeLink: (linkId: string) => void;
   getLinksForPage: (pageId: string) => Link[];
 }
@@ -70,7 +73,17 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   loadProject: (data, path) => {
-    set({ project: data, projectPath: path, isDirty: false });
+    set({
+      project: {
+        ...data,
+        links: data.links.map((link) => ({
+          ...link,
+          transition: (link.transition ?? 'instant') as LinkTransition,
+        })),
+      },
+      projectPath: path,
+      isDirty: false,
+    });
   },
 
   markProjectSaved: (data, path) => {
@@ -221,11 +234,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   addLink: (sourcePageId, sourceElementId, targetPageId) => {
     const { project } = get();
     const id = generateId();
-    const newLink: Link = { id, sourcePageId, sourceElementId, targetPageId };
+    const newLink: Link = { id, sourcePageId, sourceElementId, targetPageId, transition: 'instant' };
 
     set({ project: addLinkToProject(project, newLink), isDirty: true });
 
     return newLink;
+  },
+
+  updateLink: (linkId, updates) => {
+    const { project } = get();
+    set({ project: updateLinkInProject(project, linkId, updates), isDirty: true });
   },
 
   removeLink: (linkId) => {
