@@ -7,6 +7,7 @@ interface UIStore {
   selectedPageId: string | null;
   selectedElementId: string | null;
   selectedLinkId: string | null;
+  interactionPageOrder: string[];
   isDirty: boolean;
   isAddPageDialogOpen: boolean;
   isLinkCreationMode: boolean;
@@ -15,6 +16,7 @@ interface UIStore {
 
   navigateToInteraction: () => void;
   navigateToPageDesign: (pageId: string) => void;
+  bringPageToFront: (pageId: string) => void;
   selectPage: (pageId: string | null) => void;
   selectElement: (elementId: string | null) => void;
   selectLink: (linkId: string | null) => void;
@@ -32,6 +34,7 @@ export const useUIStore = create<UIStore>((set) => ({
   selectedPageId: null,
   selectedElementId: null,
   selectedLinkId: null,
+  interactionPageOrder: [],
   isDirty: false,
   isAddPageDialogOpen: false,
   isLinkCreationMode: false,
@@ -57,6 +60,12 @@ export const useUIStore = create<UIStore>((set) => ({
       selectedPageId: null,
       selectedElementId: null,
     });
+  },
+
+  bringPageToFront: (pageId) => {
+    set((state) => ({
+      interactionPageOrder: [...state.interactionPageOrder.filter((id) => id !== pageId), pageId],
+    }));
   },
 
   selectPage: (pageId) => {

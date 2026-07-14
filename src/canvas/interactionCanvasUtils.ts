@@ -65,13 +65,6 @@ export function renderInteractionScene({
     viewport.scale,
   );
 
-  if (isLinkCreationMode && linkSourcePageId) {
-    const sourcePoint = getLinkSourceWorldPoint(project.pages, linkSourcePageId, linkSourceElementId);
-    if (sourcePoint) {
-      renderTempLinkLine(ctx, sourcePoint.x, sourcePoint.y, mouseWorld.x, mouseWorld.y);
-    }
-  }
-
   ctx.restore();
 
   for (const page of unselectedPages) {
@@ -82,6 +75,17 @@ export function renderInteractionScene({
       viewport.offsetX,
       viewport.offsetY,
       false,
+    );
+  }
+
+  if (selectedPage) {
+    renderPageCompositeScreenSpace(
+      ctx,
+      selectedPage,
+      viewport.scale,
+      viewport.offsetX,
+      viewport.offsetY,
+      true,
     );
   }
 
@@ -97,16 +101,36 @@ export function renderInteractionScene({
     );
   }
 
-  if (selectedPage) {
-    renderPageCompositeScreenSpace(
-      ctx,
-      selectedPage,
-      viewport.scale,
-      viewport.offsetX,
-      viewport.offsetY,
-      true,
-    );
+  if (isLinkCreationMode && linkSourcePageId) {
+    const sourcePoint = getLinkSourceWorldPoint(project.pages, linkSourcePageId, linkSourceElementId);
+    if (sourcePoint) {
+      ctx.save();
+      ctx.translate(viewport.offsetX, viewport.offsetY);
+      ctx.scale(viewport.scale, viewport.scale);
+      renderTempLinkLine(ctx, sourcePoint.x, sourcePoint.y, mouseWorld.x, mouseWorld.y);
+      ctx.restore();
+    }
   }
+}
+
+export function getOrderedInteractionPages(
+  pages: Page[],
+  interactionPageOrder: string[],
+): Page[] {
+  if (interactionPageOrder.length === 0) {
+    return pages;
+  }
+
+  const pageMap = new Map(pages.map((page) => [page.id, page]));
+  const knownIds = new Set(interactionPageOrder);
+
+  const orderedPages = interactionPageOrder
+    .map((pageId) => pageMap.get(pageId))
+    .filter((page): page is Page => Boolean(page));
+
+  const remainingPages = pages.filter((page) => !knownIds.has(page.id));
+
+  return [...remainingPages, ...orderedPages];
 }
 
 export function getCanvasPointerPosition(

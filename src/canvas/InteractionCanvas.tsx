@@ -6,6 +6,7 @@ import { hitTestLinkScreenSpace } from '@/canvas/renderers/linkRenderer';
 import { hitTestPage } from '@/canvas/hitTest';
 import {
   getCanvasPointerPosition,
+  getOrderedInteractionPages,
   type InteractionDragState,
   renderInteractionScene,
 } from '@/canvas/interactionCanvasUtils';
@@ -20,6 +21,8 @@ export const InteractionCanvas: React.FC = () => {
   const updatePagePosition = useProjectStore((s) => s.updatePagePosition);
   const selectedPageId = useUIStore((s) => s.selectedPageId);
   const selectedLinkId = useUIStore((s) => s.selectedLinkId);
+  const interactionPageOrder = useUIStore((s) => s.interactionPageOrder);
+  const bringPageToFront = useUIStore((s) => s.bringPageToFront);
   const selectPage = useUIStore((s) => s.selectPage);
   const selectLink = useUIStore((s) => s.selectLink);
   const navigateToPageDesign = useUIStore((s) => s.navigateToPageDesign);
@@ -39,6 +42,10 @@ export const InteractionCanvas: React.FC = () => {
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
   const [mouseWorld, setMouseWorld] = React.useState({ x: 0, y: 0 });
+  const orderedPages = React.useMemo(
+    () => getOrderedInteractionPages(project.pages, interactionPageOrder),
+    [interactionPageOrder, project.pages],
+  );
 
   // 渲染循环
   const render = useCallback(() => {
@@ -57,7 +64,7 @@ export const InteractionCanvas: React.FC = () => {
       ctx,
       canvasWidth: canvas.width,
       canvasHeight: canvas.height,
-      project,
+      project: { ...project, pages: orderedPages },
       selectedPageId,
       selectedLinkId,
       viewport,
@@ -68,7 +75,7 @@ export const InteractionCanvas: React.FC = () => {
     });
 
     animFrameRef.current = requestAnimationFrame(render);
-  }, [project, selectedPageId, selectedLinkId, viewport, isLinkCreationMode, linkSourcePageId, linkSourceElementId, mouseWorld]);
+  }, [orderedPages, project, selectedPageId, selectedLinkId, viewport, isLinkCreationMode, linkSourcePageId, linkSourceElementId, mouseWorld]);
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(render);
@@ -120,7 +127,7 @@ export const InteractionCanvas: React.FC = () => {
 
       // 链接创建模式
       if (isLinkCreationMode) {
-        const targetPage = hitTestPage(project.pages, world.x, world.y);
+        const targetPage = hitTestPage(orderedPages, world.x, world.y);
         if (targetPage && linkSourcePageId && linkSourceElementId) {
           const existingLink = project.links.find(
             (link) =>
@@ -151,15 +158,16 @@ export const InteractionCanvas: React.FC = () => {
 
       // 先检测链接线点击
       const pointer = getCanvasPointerPosition(canvasRef.current!, e.clientX, e.clientY);
-      const hitLink = hitTestLinkScreenSpace(project.links, project.pages, viewport.scale, viewport.offsetX, viewport.offsetY, pointer.x, pointer.y);
+      const hitLink = hitTestLinkScreenSpace(project.links, orderedPages, viewport.scale, viewport.offsetX, viewport.offsetY, pointer.x, pointer.y);
       if (hitLink) {
         selectLink(hitLink.id);
         return;
       }
 
-      const hitPage = hitTestPage(project.pages, world.x, world.y);
+      const hitPage = hitTestPage(orderedPages, world.x, world.y);
 
       if (hitPage) {
+        bringPageToFront(hitPage.id);
         selectPage(hitPage.id);
         dragRef.current = {
           pageId: hitPage.id,
@@ -175,7 +183,7 @@ export const InteractionCanvas: React.FC = () => {
         panStart.current = { x: e.clientX, y: e.clientY };
       }
     },
-    [getWorldPos, project.pages, project.links, isLinkCreationMode, linkSourcePageId, linkSourceElementId, selectPage, selectLink, addLink, removeLink, cancelLinkCreation, viewport],
+    [getWorldPos, orderedPages, project.links, isLinkCreationMode, linkSourcePageId, linkSourceElementId, selectPage, selectLink, addLink, bringPageToFront, removeLink, cancelLinkCreation, viewport],
   );
 
   const onMouseMove = useCallback(
@@ -214,12 +222,12 @@ export const InteractionCanvas: React.FC = () => {
   const onDoubleClick = useCallback(
     (e: React.MouseEvent) => {
       const world = getWorldPos(e);
-      const hitPage = hitTestPage(project.pages, world.x, world.y);
+      const hitPage = hitTestPage(orderedPages, world.x, world.y);
       if (hitPage) {
         navigateToPageDesign(hitPage.id);
       }
     },
-    [getWorldPos, project.pages, navigateToPageDesign],
+    [getWorldPos, navigateToPageDesign, orderedPages],
   );
 
   const onWheel = useCallback(
