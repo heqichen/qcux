@@ -7,7 +7,7 @@ import { InteractionToolbar, InteractionToolbox, AddPageDialog } from '@/views/I
 import { PageDesignToolbar, PageDesignToolbox } from '@/views/PageDesignView/PageDesignView';
 import { InteractionCanvas } from '@/canvas/InteractionCanvas';
 import { PageDesignCanvas } from '@/canvas/PageDesignCanvas';
-import type { Page } from '@/types/project';
+import type { Element, Page } from '@/types/project';
 
 const App: React.FC = () => {
   const currentView = useUIStore((s) => s.currentView);
@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const isDirty = useProjectStore((s) => s.isDirty);
   const project = useProjectStore((s) => s.project);
   const duplicatePageFromSnapshot = useProjectStore((s) => s.duplicatePageFromSnapshot);
+  const duplicateElementFromSnapshot = useProjectStore((s) => s.duplicateElementFromSnapshot);
   const removeElement = useProjectStore((s) => s.removeElement);
   const selectedPageId = useUIStore((s) => s.selectedPageId);
   const currentPageId = useUIStore((s) => s.currentPageId);
@@ -23,6 +24,7 @@ const App: React.FC = () => {
   const selectElement = useUIStore((s) => s.selectElement);
   const saveProject = useProjectSave();
   const copiedPageRef = useRef<Page | null>(null);
+  const copiedElementRef = useRef<{ element: Element; pasteCount: number } | null>(null);
 
   useEffect(() => {
     const title = getProjectWindowTitle(projectPath, isDirty);
@@ -68,6 +70,44 @@ const App: React.FC = () => {
         return;
       }
 
+      if (currentView === 'pageDesign' && (event.ctrlKey || event.metaKey)) {
+        if (event.key.toLowerCase() === 'c') {
+          if (!currentPageId || !selectedElementId) {
+            return;
+          }
+
+          const currentPage = project.pages.find((page) => page.id === currentPageId);
+          const selectedElement = currentPage?.elements.find((element) => element.id === selectedElementId);
+          if (!selectedElement) {
+            return;
+          }
+
+          event.preventDefault();
+          copiedElementRef.current = {
+            element: { ...selectedElement },
+            pasteCount: 0,
+          };
+          return;
+        }
+
+        if (event.key.toLowerCase() === 'v' && currentPageId && copiedElementRef.current) {
+          event.preventDefault();
+          const nextPasteCount = copiedElementRef.current.pasteCount + 1;
+          const duplicatedElement = duplicateElementFromSnapshot(
+            currentPageId,
+            copiedElementRef.current.element,
+            nextPasteCount,
+          );
+
+          copiedElementRef.current = {
+            ...copiedElementRef.current,
+            pasteCount: nextPasteCount,
+          };
+          selectElement(duplicatedElement.id);
+          return;
+        }
+      }
+
       if (currentView !== 'interaction' || !(event.ctrlKey || event.metaKey)) {
         return;
       }
@@ -98,6 +138,7 @@ const App: React.FC = () => {
   }, [
     currentPageId,
     currentView,
+    duplicateElementFromSnapshot,
     duplicatePageFromSnapshot,
     project.pages,
     removeElement,

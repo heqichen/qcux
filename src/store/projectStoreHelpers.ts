@@ -7,6 +7,7 @@ import {
 import type { BaseElement, Element, Link, Page, ProjectFile } from '@/types/project';
 
 const DUPLICATE_PAGE_OFFSET = 80;
+const DUPLICATE_ELEMENT_OFFSET = 40;
 
 export function createPositionedPage(
   project: ProjectFile,
@@ -154,4 +155,21 @@ export function createDuplicatedPage(
       id: nextElementIds[index],
     })) as Element[],
   };
+}
+
+export function createDuplicatedElement(
+  sourceElement: Element,
+  nextElementId: string,
+  nextZIndex: number,
+  pasteCount: number,
+): Element {
+  const offset = DUPLICATE_ELEMENT_OFFSET * Math.max(1, pasteCount);
+
+  return {
+    ...sourceElement,
+    id: nextElementId,
+    x: sourceElement.x + offset,
+    y: sourceElement.y + offset,
+    zIndex: nextZIndex,
+  } as Element;
 }
