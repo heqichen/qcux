@@ -46,37 +46,91 @@ export function renderPageThumbnail(
   }
 }
 
-// Landing Page 标识在屏幕空间渲染，固定字体大小，不受缩放影响
-export function renderLandingTagScreenSpace(
+export function renderPageCompositeScreenSpace(
   ctx: CanvasRenderingContext2D,
   page: Page,
   scale: number,
   offsetX: number,
   offsetY: number,
+  isSelected: boolean,
 ): void {
   const sx = page.x * scale + offsetX;
-  const sy = (page.y + page.height) * scale + offsetY;
-  ctx.fillStyle = '#FF9800';
-  ctx.font = 'bold 14px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText('🏠 Landing', sx, sy + 4);
-}
+  const sy = page.y * scale + offsetY;
+  const sw = page.width * scale;
+  const sh = page.height * scale;
 
-// 页面标题在屏幕空间渲染，固定字体大小，不受缩放影响
-export function renderPageTitleScreenSpace(
-  ctx: CanvasRenderingContext2D,
-  page: Page,
-  scale: number,
-  offsetX: number,
-  offsetY: number,
-): void {
-  const { x, y, width, title } = page;
-  const sx = (x + width / 2) * scale + offsetX;
-  const sy = y * scale + offsetY;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(sx, sy, sw, sh);
+  ctx.clip();
+
+  ctx.fillStyle = PAGE_BG_COLOR;
+  ctx.fillRect(sx, sy, sw, sh);
+
+  for (const element of page.elements) {
+    const ex = sx + element.x * scale;
+    const ey = sy + element.y * scale;
+    const ew = element.width * scale;
+    const eh = element.height * scale;
+
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(ex, ey, ew, eh);
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ex, ey, ew, eh);
+  }
+
+  ctx.restore();
+
+  ctx.strokeStyle = isSelected ? PAGE_SELECTED_BORDER_COLOR : PAGE_BORDER_COLOR;
+  ctx.lineWidth = isSelected ? 2 : 1;
+  ctx.strokeRect(sx, sy, sw, sh);
+
+  if (isSelected) {
+    ctx.strokeStyle = SELECTION_STROKE_COLOR;
+    ctx.lineWidth = SELECTION_STROKE_WIDTH;
+    ctx.strokeRect(sx, sy, sw, sh);
+  }
+
   ctx.fillStyle = '#333333';
   ctx.font = 'bold 15px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText(title, sx, sy - 6);
+  ctx.fillText(page.title, sx + sw / 2, sy - 6);
+
+  if (page.isLandingPage) {
+    ctx.fillStyle = '#FF9800';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('🏠 Landing', sx, sy + sh + 4);
+  }
+}
+
+export function renderPageDecorations(
+  ctx: CanvasRenderingContext2D,
+  page: Page,
+  scale: number,
+): void {
+  const inverseScale = 1 / scale;
+
+  const { x, y, width, title } = page;
+  const titleX = x + width / 2;
+  const titleY = y - 6 * inverseScale;
+
+  ctx.fillStyle = '#333333';
+  ctx.font = `bold ${15 * inverseScale}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(title, titleX, titleY);
+
+  if (page.isLandingPage) {
+    const landingX = x;
+    const landingY = y + page.height + 4 * inverseScale;
+    ctx.fillStyle = '#FF9800';
+    ctx.font = `bold ${14 * inverseScale}px sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('🏠 Landing', landingX, landingY);
+  }
 }

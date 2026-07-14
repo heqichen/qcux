@@ -1,8 +1,6 @@
 import { renderLinkScreenSpace, renderTempLinkLine } from '@/canvas/renderers/linkRenderer';
 import {
-  renderLandingTagScreenSpace,
-  renderPageThumbnail,
-  renderPageTitleScreenSpace,
+  renderPageCompositeScreenSpace,
 } from '@/canvas/renderers/pageRenderer';
 import { CANVAS_BG_COLOR, GRID_COLOR, GRID_SIZE } from '@/utils/constants';
 import type { Page, ProjectFile, Viewport } from '@/types/project';
@@ -47,6 +45,9 @@ export function renderInteractionScene({
   linkSourceElementId,
   mouseWorld,
 }: RenderInteractionSceneArgs): void {
+  const selectedPage = project.pages.find((page) => page.id === selectedPageId) ?? null;
+  const unselectedPages = project.pages.filter((page) => page.id !== selectedPageId);
+
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = CANVAS_BG_COLOR;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -64,10 +65,6 @@ export function renderInteractionScene({
     viewport.scale,
   );
 
-  for (const page of project.pages) {
-    renderPageThumbnail(ctx, page, page.id === selectedPageId);
-  }
-
   if (isLinkCreationMode && linkSourcePageId) {
     const sourcePoint = getLinkSourceWorldPoint(project.pages, linkSourcePageId, linkSourceElementId);
     if (sourcePoint) {
@@ -76,6 +73,17 @@ export function renderInteractionScene({
   }
 
   ctx.restore();
+
+  for (const page of unselectedPages) {
+    renderPageCompositeScreenSpace(
+      ctx,
+      page,
+      viewport.scale,
+      viewport.offsetX,
+      viewport.offsetY,
+      false,
+    );
+  }
 
   for (const link of project.links) {
     renderLinkScreenSpace(
@@ -89,14 +97,15 @@ export function renderInteractionScene({
     );
   }
 
-  for (const page of project.pages) {
-    renderPageTitleScreenSpace(ctx, page, viewport.scale, viewport.offsetX, viewport.offsetY);
-  }
-
-  for (const page of project.pages) {
-    if (page.isLandingPage) {
-      renderLandingTagScreenSpace(ctx, page, viewport.scale, viewport.offsetX, viewport.offsetY);
-    }
+  if (selectedPage) {
+    renderPageCompositeScreenSpace(
+      ctx,
+      selectedPage,
+      viewport.scale,
+      viewport.offsetX,
+      viewport.offsetY,
+      true,
+    );
   }
 }
 
