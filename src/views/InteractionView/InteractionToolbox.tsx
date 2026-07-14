@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import type { Link, ProjectFile } from '@/types/project';
-import { btnStyle, dialogOverlayStyle, dialogStyle, toolboxStyle } from '@/views/InteractionView/styles';
+import { btnStyle, dialogOverlayStyle, dialogStyle, inputStyle, toolboxStyle } from '@/views/InteractionView/styles';
 
 export const InteractionToolbox: React.FC = () => {
   const selectedPageId = useUIStore((state) => state.selectedPageId);
@@ -10,6 +10,7 @@ export const InteractionToolbox: React.FC = () => {
   const selectLink = useUIStore((state) => state.selectLink);
   const startLinkCreation = useUIStore((state) => state.startLinkCreation);
   const removeLink = useProjectStore((state) => state.removeLink);
+  const updateProjectName = useProjectStore((state) => state.updateProjectName);
   const project = useProjectStore((state) => state.project);
   const [showElementList, setShowElementList] = useState(false);
 
@@ -53,7 +54,16 @@ export const InteractionToolbox: React.FC = () => {
       )}
 
       {!selectedLink && !selectedPage && (
-        <div style={emptyStateStyle}>选择一个界面或交互链接</div>
+        <div style={emptyStateStyle}>
+          <div style={emptyStateTitleStyle}>项目名称</div>
+          <input
+            style={inputStyle}
+            value={project.metadata.name}
+            placeholder="输入项目名称"
+            onChange={(event) => updateProjectName(event.target.value)}
+          />
+          <div style={emptyStateHintStyle}>未选中界面或交互时，可以在这里直接修改项目名称。</div>
+        </div>
       )}
 
       {showElementList && selectedPage && (
@@ -132,6 +142,20 @@ const emptyStateStyle: React.CSSProperties = {
   border: '1px solid #e2e8f0',
   borderRadius: 8,
   padding: 12,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+};
+
+const emptyStateTitleStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: '#334155',
+};
+
+const emptyStateHintStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: '#64748b',
 };
 
 const LinkProperties: React.FC<{

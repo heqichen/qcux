@@ -10,6 +10,7 @@ import {
 import {
   addElementToProject,
   addLinkToProject,
+  createDuplicatedPage,
   createPageElement,
   createPositionedPage,
   getNextPageElementZIndex,
@@ -33,6 +34,8 @@ interface ProjectStore {
   loadProject: (data: ProjectFile, path: string) => void;
   markProjectSaved: (data: ProjectFile, path?: string | null) => void;
   getSerializedProject: () => ProjectFile;
+  updateProjectName: (name: string) => void;
+  duplicatePageFromSnapshot: (sourcePage: Page) => Page;
 
   // 页面操作
   addPage: (title: string, width: number, height: number) => Page;
@@ -85,6 +88,37 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         modifiedAt: new Date().toISOString(),
       },
     };
+  },
+
+  updateProjectName: (name) => {
+    const { project } = get();
+    set({
+      project: {
+        ...project,
+        metadata: {
+          ...project.metadata,
+          name,
+        },
+      },
+      isDirty: true,
+    });
+  },
+
+  duplicatePageFromSnapshot: (sourcePage) => {
+    const { project } = get();
+    const nextPageId = generateId();
+    const nextElementIds = sourcePage.elements.map(() => generateId());
+    const duplicatedPage = createDuplicatedPage(sourcePage, nextPageId, nextElementIds);
+
+    set({
+      project: {
+        ...project,
+        pages: [...project.pages, duplicatedPage],
+      },
+      isDirty: true,
+    });
+
+    return duplicatedPage;
   },
 
   addPage: (title, width, height) => {

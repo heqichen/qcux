@@ -6,6 +6,8 @@ import {
 } from '@/types/project';
 import type { BaseElement, Element, Link, Page, ProjectFile } from '@/types/project';
 
+const DUPLICATE_PAGE_OFFSET = 80;
+
 export function createPositionedPage(
   project: ProjectFile,
   pageId: string,
@@ -133,5 +135,23 @@ export function removeLinkFromProject(project: ProjectFile, linkId: string): Pro
   return {
     ...project,
     links: project.links.filter((link) => link.id !== linkId),
+  };
+}
+
+export function createDuplicatedPage(
+  sourcePage: Page,
+  nextPageId: string,
+  nextElementIds: string[],
+): Page {
+  return {
+    ...sourcePage,
+    id: nextPageId,
+    x: sourcePage.x + DUPLICATE_PAGE_OFFSET,
+    y: sourcePage.y + DUPLICATE_PAGE_OFFSET,
+    isLandingPage: false,
+    elements: sourcePage.elements.map((element, index) => ({
+      ...element,
+      id: nextElementIds[index],
+    })) as Element[],
   };
 }

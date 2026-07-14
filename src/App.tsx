@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useProjectSave } from './hooks/useProjectSave';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
@@ -7,12 +7,18 @@ import { InteractionToolbar, InteractionToolbox, AddPageDialog } from '@/views/I
 import { PageDesignToolbar, PageDesignToolbox } from '@/views/PageDesignView/PageDesignView';
 import { InteractionCanvas } from '@/canvas/InteractionCanvas';
 import { PageDesignCanvas } from '@/canvas/PageDesignCanvas';
+import type { Page } from '@/types/project';
 
 const App: React.FC = () => {
   const currentView = useUIStore((s) => s.currentView);
   const projectPath = useProjectStore((s) => s.projectPath);
   const isDirty = useProjectStore((s) => s.isDirty);
+  const project = useProjectStore((s) => s.project);
+  const duplicatePageFromSnapshot = useProjectStore((s) => s.duplicatePageFromSnapshot);
+  const selectedPageId = useUIStore((s) => s.selectedPageId);
+  const selectPage = useUIStore((s) => s.selectPage);
   const saveProject = useProjectSave();
+  const copiedPageRef = useRef<Page | null>(null);
 
   useEffect(() => {
     const title = getProjectWindowTitle(projectPath, isDirty);
@@ -36,15 +42,49 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isEditableTarget = target instanceof HTMLInputElement
+        || target instanceof HTMLTextAreaElement
+        || target?.isContentEditable;
+
+      if (isEditableTarget) {
+        return;
+      }
+
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
         event.preventDefault();
         void saveProject();
+        return;
+      }
+
+      if (currentView !== 'interaction' || !(event.ctrlKey || event.metaKey)) {
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'c') {
+        const selectedPage = project.pages.find((page) => page.id === selectedPageId);
+        if (!selectedPage) {
+          return;
+        }
+
+        event.preventDefault();
+        copiedPageRef.current = {
+          ...selectedPage,
+          elements: selectedPage.elements.map((element) => ({ ...element })),
+        };
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'v' && copiedPageRef.current) {
+        event.preventDefault();
+        const duplicatedPage = duplicatePageFromSnapshot(copiedPageRef.current);
+        selectPage(duplicatedPage.id);
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [saveProject]);
+  }, [currentView, duplicatePageFromSnapshot, project.pages, saveProject, selectPage, selectedPageId]);
 
   if (currentView === 'interaction') {
     return (
