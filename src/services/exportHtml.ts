@@ -92,6 +92,8 @@ function createPageFrame(page, ownerPageId) {
   container.className = 'page-frame';
   container.style.width = page.width + 'px';
   container.style.height = page.height + 'px';
+  container.style.overflowX = page.overflowMode === 'scroll' ? 'auto' : 'hidden';
+  container.style.overflowY = page.overflowMode === 'scroll' ? 'auto' : 'hidden';
 
   page.elements.sort(function(a, b) { return a.zIndex - b.zIndex; }).forEach(function(el) {
     var div = document.createElement('div');

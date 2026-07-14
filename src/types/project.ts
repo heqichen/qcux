@@ -21,6 +21,7 @@ export interface Page {
   x: number;
   y: number;
   isLandingPage: boolean;
+  overflowMode: PageOverflowMode;
   elements: Element[];
 }
 
@@ -33,6 +34,7 @@ export interface Link {
 }
 
 export type LinkTransition = 'instant' | 'slide-right' | 'slide-left' | 'slide-up' | 'slide-down';
+export type PageOverflowMode = 'hidden' | 'scroll';
 
 export type ElementType = 'object' | 'text' | 'button';
 
@@ -103,7 +105,7 @@ export function createDefaultPage(
   y: number,
   isLandingPage: boolean,
 ): Page {
-  return { id, title, width, height, x, y, isLandingPage, elements: [] };
+  return { id, title, width, height, x, y, isLandingPage, overflowMode: 'hidden', elements: [] };
 }
 
 export function createObjectElement(

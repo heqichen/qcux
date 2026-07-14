@@ -58,6 +58,7 @@ export const PageDesignToolbox: React.FC = () => {
   const selectElement = useUIStore((s) => s.selectElement);
   const project = useProjectStore((s) => s.project);
   const updatePageTitle = useProjectStore((s) => s.updatePageTitle);
+  const updatePageOverflowMode = useProjectStore((s) => s.updatePageOverflowMode);
   const updateElement = useProjectStore((s) => s.updateElement);
   const removeElement = useProjectStore((s) => s.removeElement);
 
@@ -79,6 +80,19 @@ export const PageDesignToolbox: React.FC = () => {
               updatePageTitle(currentPageId, event.target.value);
             }}
           />
+          <div style={emptyStateTitleStyle}>溢出显示</div>
+          <select
+            style={emptyStateInputStyle}
+            value={currentPage?.overflowMode || 'hidden'}
+            onChange={(event) => {
+              if (!currentPageId) return;
+              updatePageOverflowMode(currentPageId, event.target.value as 'hidden' | 'scroll');
+            }}
+          >
+            <option value="hidden">隐藏</option>
+            <option value="scroll">滚动条</option>
+          </select>
+          <div style={emptyStateHintStyle}>这个设置只影响导出的 HTML。选择滚动条后，导出页面超出界面尺寸的内容可以滚动查看。</div>
           <div style={emptyStateHintStyle}>未选中元素时，可以在这里直接修改当前界面的名称。</div>
         </div>
       </div>

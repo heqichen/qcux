@@ -46,6 +46,7 @@ interface ProjectStore {
   removePage: (pageId: string) => void;
   updatePagePosition: (pageId: string, x: number, y: number) => void;
   updatePageTitle: (pageId: string, title: string) => void;
+  updatePageOverflowMode: (pageId: string, overflowMode: Page['overflowMode']) => void;
   setLandingPage: (pageId: string) => void;
   getPageById: (pageId: string) => Page | undefined;
 
@@ -76,6 +77,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set({
       project: {
         ...data,
+        pages: data.pages.map((page) => ({
+          ...page,
+          overflowMode: page.overflowMode ?? 'hidden',
+        })),
         links: data.links.map((link) => ({
           ...link,
           transition: (link.transition ?? 'instant') as LinkTransition,
@@ -186,6 +191,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   updatePageTitle: (pageId, title) => {
     const { project } = get();
     set({ project: updatePageInProject(project, pageId, { title }), isDirty: true });
+  },
+
+  updatePageOverflowMode: (pageId, overflowMode) => {
+    const { project } = get();
+    set({ project: updatePageInProject(project, pageId, { overflowMode }), isDirty: true });
   },
 
   setLandingPage: (pageId) => {
