@@ -2,12 +2,14 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewportStore } from '@/store/viewportStore';
-import { renderPageThumbnail, renderPageTitleScreenSpace, renderLandingTagScreenSpace } from '@/canvas/renderers/pageRenderer';
-import { renderLinkScreenSpace, renderTempLinkLine, hitTestLinkScreenSpace } from '@/canvas/renderers/linkRenderer';
+import { hitTestLinkScreenSpace } from '@/canvas/renderers/linkRenderer';
 import { hitTestPage } from '@/canvas/hitTest';
+import {
+  getCanvasPointerPosition,
+  type InteractionDragState,
+  renderInteractionScene,
+} from '@/canvas/interactionCanvasUtils';
 import { screenToWorld } from '@/utils/geometry';
-import { CANVAS_BG_COLOR, GRID_COLOR, GRID_SIZE } from '@/utils/constants';
-import type { Page } from '@/types/project';
 
 export const InteractionCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,17 +33,10 @@ export const InteractionCanvas: React.FC = () => {
   const zoom = useViewportStore((s) => s.zoom);
   const pan = useViewportStore((s) => s.pan);
 
-  const dragRef = useRef<{
-    pageId: string | null;
-    startX: number;
-    startY: number;
-    pageStartX: number;
-    pageStartY: number;
-  } | null>(null);
+  const dragRef = useRef<InteractionDragState | null>(null);
 
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
-  const mouseWorldRef = useRef({ x: 0, y: 0 });
   const [mouseWorld, setMouseWorld] = React.useState({ x: 0, y: 0 });
 
   // 渲染循环
@@ -57,55 +52,20 @@ export const InteractionCanvas: React.FC = () => {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderInteractionScene({
+      ctx,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+      project,
+      selectedPageId,
+      selectedLinkId,
+      viewport,
+      isLinkCreationMode,
+      linkSourcePageId,
+      linkSourceElementId,
+      mouseWorld,
+    });
 
-    // 背景
-    ctx.fillStyle = CANVAS_BG_COLOR;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(viewport.offsetX, viewport.offsetY);
-    ctx.scale(viewport.scale, viewport.scale);
-
-    // 网格
-    drawGrid(ctx, canvas.width / viewport.scale, canvas.height / viewport.scale, viewport.offsetX, viewport.offsetY, viewport.scale);
-
-    // 页面缩略图
-    for (const page of project.pages) {
-      renderPageThumbnail(ctx, page, page.id === selectedPageId);
-    }
-
-    // 创建链接时的临时线
-    if (isLinkCreationMode && linkSourcePageId) {
-      const sourcePage = project.pages.find((p) => p.id === linkSourcePageId);
-      if (sourcePage) {
-        const sourceEl = sourcePage.elements.find((e) => e.id === linkSourceElementId);
-        const sx = sourcePage.x + (sourceEl ? sourceEl.x + sourceEl.width / 2 : sourcePage.width / 2);
-        const sy = sourcePage.y + (sourceEl ? sourceEl.y + sourceEl.height / 2 : sourcePage.height / 2);
-        renderTempLinkLine(ctx, sx, sy, mouseWorld.x, mouseWorld.y);
-      }
-    }
-
-    ctx.restore();
-
-    // --- 屏幕空间渲染（不受缩放影响） ---
-
-    // 链接线 - 在屏幕空间渲染，固定粗细
-    for (const link of project.links) {
-      renderLinkScreenSpace(ctx, link, project.pages, viewport.scale, viewport.offsetX, viewport.offsetY, link.id === selectedLinkId);
-    }
-
-    // 页面标题 - 固定字体大小
-    for (const page of project.pages) {
-      renderPageTitleScreenSpace(ctx, page, viewport.scale, viewport.offsetX, viewport.offsetY);
-    }
-
-    // Landing Page 标记 - 固定字体大小
-    for (const page of project.pages) {
-      if (page.isLandingPage) {
-        renderLandingTagScreenSpace(ctx, page, viewport.scale, viewport.offsetX, viewport.offsetY);
-      }
-    }
     animFrameRef.current = requestAnimationFrame(render);
   }, [project, selectedPageId, selectedLinkId, viewport, isLinkCreationMode, linkSourcePageId, linkSourceElementId, mouseWorld]);
 
@@ -132,10 +92,11 @@ export const InteractionCanvas: React.FC = () => {
     (e: React.MouseEvent): { x: number; y: number } => {
       const canvas = canvasRef.current;
       if (!canvas) return { x: 0, y: 0 };
-      const rect = canvas.getBoundingClientRect();
+      const point = getCanvasPointerPosition(canvas, e.clientX, e.clientY);
+
       return screenToWorld(
-        e.clientX - rect.left,
-        e.clientY - rect.top,
+        point.x,
+        point.y,
         viewport.scale,
         viewport.offsetX,
         viewport.offsetY,
@@ -167,7 +128,8 @@ export const InteractionCanvas: React.FC = () => {
       }
 
       // 先检测链接线点击
-      const hitLink = hitTestLinkScreenSpace(project.links, project.pages, viewport.scale, viewport.offsetX, viewport.offsetY, e.clientX - canvasRef.current!.getBoundingClientRect().left, e.clientY - canvasRef.current!.getBoundingClientRect().top);
+      const pointer = getCanvasPointerPosition(canvasRef.current!, e.clientX, e.clientY);
+      const hitLink = hitTestLinkScreenSpace(project.links, project.pages, viewport.scale, viewport.offsetX, viewport.offsetY, pointer.x, pointer.y);
       if (hitLink) {
         selectLink(hitLink.id);
         return;
@@ -242,8 +204,8 @@ export const InteractionCanvas: React.FC = () => {
     (e: React.WheelEvent) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      zoom('interaction', e.deltaY, e.clientX - rect.left, e.clientY - rect.top);
+      const pointer = getCanvasPointerPosition(canvas, e.clientX, e.clientY);
+      zoom('interaction', e.deltaY, pointer.x, pointer.y);
     },
     [zoom],
   );
@@ -268,33 +230,3 @@ export const InteractionCanvas: React.FC = () => {
     </div>
   );
 };
-
-function drawGrid(
-  ctx: CanvasRenderingContext2D,
-  worldWidth: number,
-  worldHeight: number,
-  offsetX: number,
-  offsetY: number,
-  scale: number,
-): void {
-  ctx.strokeStyle = GRID_COLOR;
-  ctx.lineWidth = 0.5;
-
-  const startX = -offsetX / scale;
-  const startY = -offsetY / scale;
-  const endX = startX + worldWidth + GRID_SIZE;
-  const endY = startY + worldHeight + GRID_SIZE;
-
-  for (let x = Math.floor(startX / GRID_SIZE) * GRID_SIZE; x < endX; x += GRID_SIZE) {
-    ctx.beginPath();
-    ctx.moveTo(x, startY);
-    ctx.lineTo(x, endY);
-    ctx.stroke();
-  }
-  for (let y = Math.floor(startY / GRID_SIZE) * GRID_SIZE; y < endY; y += GRID_SIZE) {
-    ctx.beginPath();
-    ctx.moveTo(startX, y);
-    ctx.lineTo(endX, y);
-    ctx.stroke();
-  }
-}

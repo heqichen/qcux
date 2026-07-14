@@ -3,17 +3,23 @@ import {
   ProjectFile,
   Page,
   Element,
-  ObjectElement,
-  TextElement,
-  ButtonElement,
   Link,
   createDefaultProject,
-  createDefaultPage,
-  createObjectElement,
-  createTextElement,
-  createButtonElement,
   BaseElement,
 } from '@/types/project';
+import {
+  addElementToProject,
+  addLinkToProject,
+  createPageElement,
+  createPositionedPage,
+  getNextPageElementZIndex,
+  removeElementFromProject,
+  removeLinkFromProject,
+  removePageFromProject,
+  setLandingPageInProject,
+  updateElementInProject,
+  updatePageInProject,
+} from '@/store/projectStoreHelpers';
 import { generateId } from '@/utils/id';
 
 interface ProjectStore {
@@ -73,14 +79,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   addPage: (title, width, height) => {
     const { project } = get();
     const id = generateId();
-
-    // 计算新页面的位置（排布在已有页面之后）
-    const existingCount = project.pages.length;
-    const x = 100 + (existingCount % 4) * 400;
-    const y = 100 + Math.floor(existingCount / 4) * 350;
-
-    const isLandingPage = project.pages.length === 0;
-    const newPage = createDefaultPage(id, title, width, height, x, y, isLandingPage);
+    const newPage = createPositionedPage(project, id, title, width, height);
 
     set({
       project: {
@@ -94,53 +93,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   removePage: (pageId) => {
     const { project } = get();
-    const page = project.pages.find((p) => p.id === pageId);
-    const wasLandingPage = page?.isLandingPage;
-
-    let pages = project.pages.filter((p) => p.id !== pageId);
-    const links = project.links.filter(
-      (l) => l.sourcePageId !== pageId && l.targetPageId !== pageId,
-    );
-
-    // 如果删除的是 landing page，设置第一个页面为 landing page
-    if (wasLandingPage && pages.length > 0) {
-      pages = pages.map((p, i) => (i === 0 ? { ...p, isLandingPage: true } : p));
-    }
-
-    set({ project: { ...project, pages, links } });
+    set({ project: removePageFromProject(project, pageId) });
   },
 
   updatePagePosition: (pageId, x, y) => {
     const { project } = get();
-    set({
-      project: {
-        ...project,
-        pages: project.pages.map((p) => (p.id === pageId ? { ...p, x, y } : p)),
-      },
-    });
+    set({ project: updatePageInProject(project, pageId, { x, y }) });
   },
 
   updatePageTitle: (pageId, title) => {
     const { project } = get();
-    set({
-      project: {
-        ...project,
-        pages: project.pages.map((p) => (p.id === pageId ? { ...p, title } : p)),
-      },
-    });
+    set({ project: updatePageInProject(project, pageId, { title }) });
   },
 
   setLandingPage: (pageId) => {
     const { project } = get();
-    set({
-      project: {
-        ...project,
-        pages: project.pages.map((p) => ({
-          ...p,
-          isLandingPage: p.id === pageId,
-        })),
-      },
-    });
+    set({ project: setLandingPageInProject(project, pageId) });
   },
 
   getPageById: (pageId) => {
@@ -153,66 +121,21 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!page) throw new Error(`Page ${pageId} not found`);
 
     const id = generateId();
-    const zIndex = page.elements.length === 0 ? 1 : Math.max(...page.elements.map((e) => e.zIndex)) + 1;
+    const element = createPageElement(page, id, type);
 
-    // 在页面内居中放置新元素
-    let element: Element;
-    switch (type) {
-      case 'object':
-        element = createObjectElement(id, page.width / 2 - 100, page.height / 2 - 60, zIndex);
-        break;
-      case 'text':
-        element = createTextElement(id, page.width / 2 - 100, page.height / 2 - 20, zIndex);
-        break;
-      case 'button':
-        element = createButtonElement(id, page.width / 2 - 80, page.height / 2 - 24, zIndex);
-        break;
-    }
-
-    set({
-      project: {
-        ...project,
-        pages: project.pages.map((p) =>
-          p.id === pageId ? { ...p, elements: [...p.elements, element] } : p,
-        ),
-      },
-    });
+    set({ project: addElementToProject(project, pageId, element) });
 
     return element;
   },
 
   removeElement: (pageId, elementId) => {
     const { project } = get();
-    set({
-      project: {
-        ...project,
-        pages: project.pages.map((p) =>
-          p.id === pageId
-            ? { ...p, elements: p.elements.filter((e) => e.id !== elementId) }
-            : p,
-        ),
-        links: project.links.filter((l) => l.sourceElementId !== elementId),
-      },
-    });
+    set({ project: removeElementFromProject(project, pageId, elementId) });
   },
 
   updateElement: (pageId, elementId, updates) => {
     const { project } = get();
-    set({
-      project: {
-        ...project,
-        pages: project.pages.map((p) =>
-          p.id === pageId
-            ? {
-                ...p,
-                elements: p.elements.map((e) =>
-                  e.id === elementId ? ({ ...e, ...updates } as Element) : e,
-                ),
-              }
-            : p,
-        ),
-      },
-    });
+    set({ project: updateElementInProject(project, pageId, elementId, updates) });
   },
 
   getElementById: (pageId, elementId) => {
@@ -223,7 +146,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   getNextZIndex: (pageId) => {
     const page = get().project.pages.find((p) => p.id === pageId);
     if (!page || page.elements.length === 0) return 1;
-    return Math.max(...page.elements.map((e) => e.zIndex)) + 1;
+    return getNextPageElementZIndex(page);
   },
 
   addLink: (sourcePageId, sourceElementId, targetPageId) => {
@@ -231,24 +154,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const id = generateId();
     const newLink: Link = { id, sourcePageId, sourceElementId, targetPageId };
 
-    set({
-      project: {
-        ...project,
-        links: [...project.links, newLink],
-      },
-    });
+    set({ project: addLinkToProject(project, newLink) });
 
     return newLink;
   },
 
   removeLink: (linkId) => {
     const { project } = get();
-    set({
-      project: {
-        ...project,
-        links: project.links.filter((l) => l.id !== linkId),
-      },
-    });
+    set({ project: removeLinkFromProject(project, linkId) });
   },
 
   getLinksForPage: (pageId) => {
