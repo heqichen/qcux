@@ -177,7 +177,6 @@ export const InteractionCanvas: React.FC = () => {
 
       if (hitPage) {
         selectPage(hitPage.id);
-        selectLink(null);
         dragRef.current = {
           pageId: hitPage.id,
           startX: e.clientX,
@@ -188,6 +187,8 @@ export const InteractionCanvas: React.FC = () => {
       } else {
         selectPage(null);
         selectLink(null);
+        isPanning.current = true;
+        panStart.current = { x: e.clientX, y: e.clientY };
       }
     },
     [getWorldPos, project.pages, project.links, isLinkCreationMode, linkSourcePageId, linkSourceElementId, selectPage, selectLink, addLink, cancelLinkCreation, viewport],

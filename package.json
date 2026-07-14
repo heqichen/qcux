@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "electron:dev": "vite",
+    "electron:dev": "vite --mode electron",
     "electron:build": "vite build && electron-builder"
   },
   "dependencies": {

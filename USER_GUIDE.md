@@ -4,6 +4,61 @@
 
 QCUX 是一个 UX 线框图设计工具，用于快速创建网页/应用的交互原型。你可以设计多个界面、添加 UI 元素，并定义界面之间的跳转关系，最后导出为可交互的网页。
 
+## 开发环境与启动
+
+### 环境要求
+
+- Node.js 20+
+- npm 10+
+
+当前项目已经验证可在 Linux 环境下使用 Node 20.15.1、npm 10.7.0 完成安装和构建。
+
+### 安装依赖
+
+在项目根目录执行：
+
+```bash
+npm install
+```
+
+如果当前环境里的 npm 在安装阶段触发断言错误，可改用下面这条更稳妥的命令：
+
+```bash
+npm install --no-audit --no-fund --progress=false
+```
+
+### 开发模式
+
+```bash
+npm run dev
+```
+
+这条命令只会启动网页开发服务器，适合直接在 VS Code 内置浏览页或浏览器里调试界面，不会自动打开 Electron 桌面窗口。
+
+如果你需要调试桌面应用，再使用：
+
+```bash
+npm run electron:dev
+```
+
+运行 `npm run electron:dev` 时，会启动渲染进程开发服务器并拉起 Electron 桌面窗口，主进程会自动打开 DevTools。
+
+### 生产构建
+
+```bash
+npm run build
+```
+
+这条命令会先执行 TypeScript 编译，再构建前端产物到 `dist/`，并构建 Electron 主进程与预加载脚本到 `dist-electron/`。
+
+### 打包桌面应用
+
+```bash
+npm run electron:build
+```
+
+该命令会先执行 Vite 构建，再通过 `electron-builder` 生成安装包。当前配置见 `electron-builder.yml`，Linux 目标为 AppImage。
+
 ## 界面介绍
 
 工具包含两个主界面：

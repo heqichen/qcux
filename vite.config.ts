@@ -4,41 +4,49 @@ import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
 import path from 'path';
 
-export default defineConfig({
-  plugins: [
-    react(),
-    electron([
-      {
-        entry: 'electron/main.ts',
-        vite: {
-          build: {
-            outDir: 'dist-electron',
-            rollupOptions: {
-              external: ['electron'],
-            },
-          },
-        },
+export default defineConfig(({ command, mode }) => {
+  const useElectron = command === 'build' || mode === 'electron';
+
+  return {
+    plugins: [
+      react(),
+      ...(useElectron
+        ? [
+            electron([
+              {
+                entry: 'electron/main.ts',
+                vite: {
+                  build: {
+                    outDir: 'dist-electron',
+                    rollupOptions: {
+                      external: ['electron'],
+                    },
+                  },
+                },
+              },
+              {
+                entry: 'electron/preload.ts',
+                onstart(args) {
+                  args.reload();
+                },
+                vite: {
+                  build: {
+                    outDir: 'dist-electron',
+                    rollupOptions: {
+                      external: ['electron'],
+                    },
+                  },
+                },
+              },
+            ]),
+            renderer(),
+          ]
+        : []),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
       },
-      {
-        entry: 'electron/preload.ts',
-        onstart(args) {
-          args.reload();
-        },
-        vite: {
-          build: {
-            outDir: 'dist-electron',
-            rollupOptions: {
-              external: ['electron'],
-            },
-          },
-        },
-      },
-    ]),
-    renderer(),
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
     },
-  },
+  };
 });

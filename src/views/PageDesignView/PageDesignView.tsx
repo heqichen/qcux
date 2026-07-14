@@ -43,6 +43,7 @@ export const PageDesignToolbar: React.FC = () => {
 };
 
 export const PageDesignToolbox: React.FC = () => {
+  const fontSizeStep = 4;
   const currentPageId = useUIStore((s) => s.currentPageId);
   const selectedElementId = useUIStore((s) => s.selectedElementId);
   const project = useProjectStore((s) => s.project);
@@ -129,10 +130,10 @@ export const PageDesignToolbox: React.FC = () => {
               value={selectedElement.fontSize}
               onChange={(e) => handleChange('fontSize', Number(e.target.value))}
             />
-            <button style={smallBtnStyle} onClick={() => handleChange('fontSize', Math.max(8, selectedElement.fontSize - 1))}>
+            <button style={smallBtnStyle} onClick={() => handleChange('fontSize', Math.max(8, selectedElement.fontSize - fontSizeStep))}>
               A-
             </button>
-            <button style={smallBtnStyle} onClick={() => handleChange('fontSize', Math.min(128, selectedElement.fontSize + 1))}>
+            <button style={smallBtnStyle} onClick={() => handleChange('fontSize', Math.min(128, selectedElement.fontSize + fontSizeStep))}>
               A+
             </button>
           </FieldRow>
